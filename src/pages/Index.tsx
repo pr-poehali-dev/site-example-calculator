@@ -7,9 +7,54 @@ const Index = () => {
   const [isZoomed, setIsZoomed] = useState(false);
   const [answer, setAnswer] = useState('');
   const [isChecking, setIsChecking] = useState(false);
+  const [command, setCommand] = useState('');
+  const [isNewYear, setIsNewYear] = useState(false);
+  const [isHardcore, setIsHardcore] = useState(false);
   const { toast } = useToast();
 
-  const correctAnswer = 999 * 6 * Math.cos(9) + 555 * Math.PI + 2 + 3 + 999 * 6 * Math.cos(9) + 555 * Math.PI + 2 + 3 + 999 * 6 * Math.cos(9) + 555 * Math.PI + 2 + 3 + 999 * 6 * Math.cos(9) + 555 * Math.PI + 2 + 3;
+  const normalAnswer = 999 * 6 * Math.cos(9) + 555 * Math.PI + 2 + 3 + 999 * 6 * Math.cos(9) + 555 * Math.PI + 2 + 3 + 999 * 6 * Math.cos(9) + 555 * Math.PI + 2 + 3 + 999 * 6 * Math.cos(9) + 555 * Math.PI + 2 + 3;
+  const hardcoreAnswer = Math.pow(999, 9) * Math.sin(Math.PI / 17) + Math.sqrt(555555555) * Math.E + Math.log(999999) * Math.tan(42);
+  
+  const correctAnswer = isHardcore ? hardcoreAnswer : normalAnswer;
+
+  const handleCommand = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && command.startsWith('/')) {
+      const cmd = command.toLowerCase();
+      
+      if (cmd === '/cheat') {
+        setAnswer(correctAnswer.toFixed(2));
+        toast({
+          title: "🎮 Чит активирован!",
+          description: "Ответ автоматически подставлен",
+          className: "bg-accent text-accent-foreground",
+        });
+        setCommand('');
+      } else if (cmd === '/hardcore') {
+        setIsHardcore(true);
+        setAnswer('');
+        toast({
+          title: "💀 Хардкор режим!",
+          description: "Теперь задача невозможная...",
+          variant: "destructive",
+        });
+        setCommand('');
+      } else if (cmd === '/secret') {
+        setIsNewYear(!isNewYear);
+        toast({
+          title: isNewYear ? "🎄 Новогодняя тема выключена" : "🎄 Новогодняя тема!",
+          description: isNewYear ? "Возвращаемся к обычной теме" : "С наступающим!",
+          className: "bg-primary text-primary-foreground",
+        });
+        setCommand('');
+      } else {
+        toast({
+          title: "❓ Неизвестная команда",
+          description: "Попробуй /cheat, /hardcore или /secret",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
   const handleCheck = () => {
     setIsChecking(true);
@@ -35,14 +80,44 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-secondary">
-      <div className="w-full max-w-4xl">
-        <div className="text-center mb-12">
+    <div className={`min-h-screen flex items-center justify-center p-4 transition-all duration-700 ${
+      isNewYear 
+        ? 'bg-gradient-to-br from-red-900 via-green-900 to-blue-900' 
+        : 'bg-gradient-to-br from-background via-background to-secondary'
+    }`}>
+      {isNewYear && (
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-10 left-10 text-6xl animate-pulse">❄️</div>
+          <div className="absolute top-20 right-20 text-4xl animate-bounce">🎄</div>
+          <div className="absolute bottom-20 left-20 text-5xl animate-pulse">⛄</div>
+          <div className="absolute bottom-10 right-10 text-6xl animate-bounce">🎁</div>
+          <div className="absolute top-1/2 left-1/4 text-3xl animate-pulse">✨</div>
+          <div className="absolute top-1/3 right-1/3 text-4xl animate-bounce">🔔</div>
+        </div>
+      )}
+      
+      <div className="w-full max-w-4xl relative z-10">
+        <div className="text-center mb-8">
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-4 tracking-tight">
-            Математическая загадка
+            {isHardcore ? '💀 Невозможная загадка' : 'Математическая загадка'}
           </h1>
           <p className="text-muted-foreground text-lg">
-            Наведи на пример и узнай настоящий вопрос
+            {isHardcore ? 'Удачи... она тебе понадобится' : 'Наведи на пример и узнай настоящий вопрос'}
+          </p>
+        </div>
+
+        <div className="mb-6 max-w-md mx-auto">
+          <Input
+            type="text"
+            value={command}
+            onChange={(e) => setCommand(e.target.value)}
+            onKeyDown={handleCommand}
+            placeholder="Введи команду (например: /cheat)..."
+            className="h-12 text-sm bg-secondary/50 border-border focus:border-primary transition-colors"
+            style={{ fontFamily: "'Roboto Mono', monospace" }}
+          />
+          <p className="text-xs text-muted-foreground mt-2 text-center">
+            Доступные команды: /cheat, /hardcore, /secret
           </p>
         </div>
 
@@ -74,39 +149,58 @@ const Index = () => {
               }`}
               style={{ fontFamily: "'Roboto Mono', monospace" }}
             >
-              <div className="text-sm md:text-base lg:text-lg text-foreground leading-relaxed max-w-full overflow-x-auto px-4">
-                <div className="whitespace-nowrap">
-                  <span className="text-primary font-bold">999×6×cos(9)</span>
-                  <span className="text-muted-foreground"> + </span>
-                  <span className="text-accent font-bold">555*π</span>
-                  <span className="text-muted-foreground"> + </span>
-                  <span className="text-foreground">2+3</span>
-                  <span className="text-muted-foreground"> + </span>
+              {isHardcore ? (
+                <div className="text-xs md:text-sm lg:text-base text-foreground leading-relaxed max-w-full overflow-x-auto px-4">
+                  <div className="whitespace-nowrap">
+                    <span className="text-red-500 font-bold">999⁹×sin(π/17)</span>
+                    <span className="text-muted-foreground"> + </span>
+                    <span className="text-yellow-500 font-bold">√555555555×e</span>
+                    <span className="text-muted-foreground"> + </span>
+                  </div>
+                  <div className="whitespace-nowrap mt-2">
+                    <span className="text-purple-500 font-bold">ln(999999)×tan(42)</span>
+                    <span className="text-muted-foreground"> + </span>
+                    <span className="text-green-500 font-bold">∫₀^∞ e^(-x²)dx</span>
+                  </div>
+                  <div className="whitespace-nowrap mt-2 text-red-600 animate-pulse">
+                    = ???
+                  </div>
                 </div>
-                <div className="whitespace-nowrap mt-2">
-                  <span className="text-primary font-bold">999×6×cos(9)</span>
-                  <span className="text-muted-foreground"> + </span>
-                  <span className="text-accent font-bold">555*π</span>
-                  <span className="text-muted-foreground"> + </span>
-                  <span className="text-foreground">2+3</span>
-                  <span className="text-muted-foreground"> + </span>
+              ) : (
+                <div className="text-sm md:text-base lg:text-lg text-foreground leading-relaxed max-w-full overflow-x-auto px-4">
+                  <div className="whitespace-nowrap">
+                    <span className="text-primary font-bold">999×6×cos(9)</span>
+                    <span className="text-muted-foreground"> + </span>
+                    <span className="text-accent font-bold">555*π</span>
+                    <span className="text-muted-foreground"> + </span>
+                    <span className="text-foreground">2+3</span>
+                    <span className="text-muted-foreground"> + </span>
+                  </div>
+                  <div className="whitespace-nowrap mt-2">
+                    <span className="text-primary font-bold">999×6×cos(9)</span>
+                    <span className="text-muted-foreground"> + </span>
+                    <span className="text-accent font-bold">555*π</span>
+                    <span className="text-muted-foreground"> + </span>
+                    <span className="text-foreground">2+3</span>
+                    <span className="text-muted-foreground"> + </span>
+                  </div>
+                  <div className="whitespace-nowrap mt-2">
+                    <span className="text-primary font-bold">999×6×cos(9)</span>
+                    <span className="text-muted-foreground"> + </span>
+                    <span className="text-accent font-bold">555*π</span>
+                    <span className="text-muted-foreground"> + </span>
+                    <span className="text-foreground">2+3</span>
+                    <span className="text-muted-foreground"> + </span>
+                  </div>
+                  <div className="whitespace-nowrap mt-2">
+                    <span className="text-primary font-bold">999×6×cos(9)</span>
+                    <span className="text-muted-foreground"> + </span>
+                    <span className="text-accent font-bold">555*π</span>
+                    <span className="text-muted-foreground"> + </span>
+                    <span className="text-foreground">2+3</span>
+                  </div>
                 </div>
-                <div className="whitespace-nowrap mt-2">
-                  <span className="text-primary font-bold">999×6×cos(9)</span>
-                  <span className="text-muted-foreground"> + </span>
-                  <span className="text-accent font-bold">555*π</span>
-                  <span className="text-muted-foreground"> + </span>
-                  <span className="text-foreground">2+3</span>
-                  <span className="text-muted-foreground"> + </span>
-                </div>
-                <div className="whitespace-nowrap mt-2">
-                  <span className="text-primary font-bold">999×6×cos(9)</span>
-                  <span className="text-muted-foreground"> + </span>
-                  <span className="text-accent font-bold">555*π</span>
-                  <span className="text-muted-foreground"> + </span>
-                  <span className="text-foreground">2+3</span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -139,9 +233,15 @@ const Index = () => {
             {isChecking ? 'Проверяю...' : 'Проверить ответ'}
           </Button>
 
-          <p className="text-center text-sm text-muted-foreground">
-            Подсказка: cos(9) в радианах ≈ -0.9111
-          </p>
+          {isHardcore ? (
+            <p className="text-center text-sm text-red-500 animate-pulse">
+              💀 Это невозможно решить без суперкомпьютера
+            </p>
+          ) : (
+            <p className="text-center text-sm text-muted-foreground">
+              Подсказка: cos(9) в радианах ≈ -0.9111
+            </p>
+          )}
         </div>
       </div>
     </div>
